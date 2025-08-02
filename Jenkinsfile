@@ -3,8 +3,11 @@ pipeline {
 
     environment {
         PATH = "$PATH:/opt/maven/apache-maven-3.9.9/bin"
-        GIT_REPO = 'https://github.com/Ehtishamul-Hassan/Springboot-LibraryManagementSystem.git'
+        GIT_REPO = 'https://github.com/Ehtishamul-Hassan/Springboot-LMS.git'
         BRANCH = 'main'
+        REMOTE_HOST = '65.2.170.119'
+        REMOTE_USER = 'ec2-user'
+        REMOTE_DIR  = '/home/ec2-user/docker-build'
     }
 
     stages {
@@ -111,23 +114,27 @@ ssh -i /home/jenkins/.ssh/ansible_key ec2-user@65.2.170.119 '
 
         stage('Build Docker Image') {
             steps {
-                sh '''
-            ssh -i ~/.ssh/ansible_key ec2-user@65.2.170.119 "
-                cd /home/ec2-user/docker-build
-                docker-compose build
-            "
-        '''
+                sshagent(['ansible-ec2-key']) {
+                    sh '''
+                        ssh -o StrictHostKeyChecking=no $REMOTE_USER@$REMOTE_HOST "
+                            cd $REMOTE_DIR &&
+                            docker-compose build
+                        "
+                    '''
+                }
             }
         }
 
         stage('Run Docker Compose') {
             steps {
-                sh '''
-            ssh -i ~/.ssh/ansible_key ec2-user@65.2.170.119 "
-                cd /home/ec2-user/docker-build
-                docker-compose up -d
-            "
-        '''
+                sshagent(['ansible-ec2-key']) {
+                    sh '''
+                        ssh -o StrictHostKeyChecking=no $REMOTE_USER@$REMOTE_HOST "
+                            cd $REMOTE_DIR &&
+                            docker-compose up -d
+                        "
+                    '''
+                }
             }
         }
     }
