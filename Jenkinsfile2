@@ -106,11 +106,13 @@ pipeline {
         stage('Copy Docker Files to Docker-Server') {
             steps {
                 sshagent(['ansible-ec2-key']) {
-                    sh '''
-            for file in Dockerfile docker-compose.yml .env; do
-                rsync -avz -e "ssh -o StrictHostKeyChecking=no" /var/lib/jenkins/workspace/JenkinsPipeline/$file $REMOTE_USER@$REMOTE_HOST:$REMOTE_DIR/
-            done
-            '''
+                    sh """
+                    for file in Dockerfile docker-compose.yml .env; do
+                        rsync -avz --ignore-times -e "ssh -o StrictHostKeyChecking=no" \
+                        /var/lib/jenkins/workspace/JenkinsPipeline/\$file \
+                        $REMOTE_USER@$REMOTE_HOST:$REMOTE_DIR/
+                    done
+                    """
                 }
             }
         }
